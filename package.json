@@ -1,0 +1,29 @@
+{
+  "name": "ts-node-init",
+  "version": "1.0.0",
+  "description": "Sample commands to init a NodeJS TypeScript project",
+  "main": "tsconfig.js",
+  "dependencies": {
+    "cuid": "^3.0.0",
+    "node-interval-tree": "^2.1.2",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.2",
+    "uuid": "^9.0.1"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn --transpile-only --ignore-watch node_modules --no-notify src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abnerfs/ts-node-init.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/abnerfs/ts-node-init/issues"
+  },
+  "homepage": "https://github.com/abnerfs/ts-node-init#readme"
+}
