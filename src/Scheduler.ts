@@ -1,29 +1,23 @@
 import IntervalTree from 'node-interval-tree'
-import { IUserSchedule, IVisitorSchedule } from "src/interfaces";
+
 import { v4 as uuidv4} from 'uuid';
+import { IVisitorSchedule } from './Interfaces/visitorSchedule';
+import { IUserSchedule } from './Interfaces/userSchedule';
+import { TimeSlot, UserTimeSlot } from './Interfaces/timeslot';
 
-interface TimeSlot {
-    employeeId: string,
-    start: string; // 2024-01-23T08:00
-    end: string; // 2024-01-23T14:00
-}
 
-interface UserTimeSlot {
-    userId: string,
-    start: string; // 2024-01-23T08:00
-    end: string; // 2024-01-23T14:00
-}
-
-class Scheduler {
-    private visitorTimeSlotMap: Map<string, TimeSlot>;
-    private visitorFreeTimes: IntervalTree<string>;
-    private visitorSchedules: IVisitorSchedule[]
+export class Scheduler {
+    visitorTimeSlotMap: Map<string, TimeSlot>;
+    visitorFreeTimes: IntervalTree<string>;
+    visitorSchedules: IVisitorSchedule[]
 
     constructor(visitorSchedules: IVisitorSchedule[]) {
-        this.visitorSchedules = visitorSchedules; 
+        this.visitorSchedules = visitorSchedules;
+        this.visitorTimeSlotMap = new Map<string, TimeSlot>();
+        this.visitorFreeTimes = new IntervalTree<string>;
     }
 
-    private generateScheduleMap() {
+    generateScheduleMap() {
         for ( const visitorSchedule of this.visitorSchedules) {
             const uniqueId = uuidv4();
             const startTime = visitorSchedule.date + "T" + visitorSchedule.startTime;
@@ -40,17 +34,14 @@ class Scheduler {
         }
     }
 
-    private isAVisitorAvailable(generatedDate: string, userSchedule: IUserSchedule): Map<string, TimeSlot> {
+    isAVisitorAvailable(generatedDate: string, userSchedule: IUserSchedule): Map<string, TimeSlot> {
 
         const timeIntervalIdAndTimeSlotMap = new Map<string, TimeSlot>(); // this is used to track the interval and visitorTimeSlot
 
         let availableTimeSlots = new Map<string, TimeSlot>();
 
-        const userTimeSlot: UserTimeSlot = {
-            userId: userSchedule._id,
-            start: generatedDate + "T" + userSchedule.startTime,
-            end: generatedDate + "T" + userSchedule.endTime,
-        }
+        const userTimeSlot = this.generateUserTimeSlot(generatedDate, userSchedule);
+
         const eligibleTimeIntervals: string[] = this.visitorFreeTimes.search(new Date(userTimeSlot.start).getTime(), new Date(userTimeSlot.end).getTime());
 
         if ( eligibleTimeIntervals) {
@@ -94,9 +85,10 @@ class Scheduler {
         return start2 <= start1 && end1 <= end2;
     }
 
-    private reserveFreeTime(key: string, timeSlot: TimeSlot, userTimeSlot: UserTimeSlot) {
+    reserveFreeTime(key: string, timeSlot: TimeSlot, generatedDate: string, userSchedule: IUserSchedule) {
     
-        
+        const userTimeSlot = this.generateUserTimeSlot(generatedDate, userSchedule);
+
         if (userTimeSlot.start == timeSlot.start && userTimeSlot.end == timeSlot.end) {
 
             this.deleteFreeTime(key, timeSlot);   
@@ -107,26 +99,25 @@ class Scheduler {
 
             this.deleteFreeTime(key, timeSlot); 
 
-            let newTimeSlot: TimeSlot;
-
             if (timeSlot.start != userTimeSlot.start) {
-                newTimeSlot = {
+                const newTimeSlot: TimeSlot = {
                     employeeId: timeSlot.employeeId,
                     start: timeSlot.start,
                     end: userTimeSlot.start
                 }
+
+                this.addFreeTime(newTimeSlot)
             }
     
-            // userTimeSlot.end != timeSlot.end
-            else {
-                newTimeSlot = {
+            if (userTimeSlot.end != timeSlot.end) {
+                const newTimeSlot: TimeSlot = {
                     employeeId: timeSlot.employeeId,
                     start: userTimeSlot.end,
                     end: timeSlot.end
                 }
-            }
 
-            this.addFreeTime(newTimeSlot)
+                this.addFreeTime(newTimeSlot)
+            }
         }
     }
 
@@ -148,5 +139,28 @@ class Scheduler {
         this.visitorFreeTimes.insert(newstartTime, newendTime, uniqueId)
         this.visitorTimeSlotMap.set(uniqueId, timeSlot);
         console.log("Add new free time slot", timeSlot); 
+    }
+
+    private generateUserTimeSlot(generatedDate: string, userSchedule: IUserSchedule): UserTimeSlot {
+        const userTimeSlot: UserTimeSlot = {
+            userId: userSchedule.userId,
+            start: generatedDate + "T" + userSchedule.startTime,
+            end: generatedDate + "T" + userSchedule.endTime,
+        }
+
+        return userTimeSlot;
+    }
+    
+    getAllTheFreeTimes() {
+        console.log("Free employee schedules")
+        this.visitorTimeSlotMap.forEach( (value, key) => {
+            console.log(key);
+            const x = this.visitorTimeSlotMap.get(key);
+            console.log(x)
+            if ( x ) {
+                const eligibleTimeIntervals: string[] = this.visitorFreeTimes.search(new Date(x.start).getTime(), new Date(x.end).getTime());
+                console.log(eligibleTimeIntervals)
+            }
+        })
     }
 }

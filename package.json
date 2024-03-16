@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/abnerfs/ts-node-init/issues"
   },
-  "homepage": "https://github.com/abnerfs/ts-node-init#readme"
+  "homepage": "https://github.com/abnerfs/ts-node-init#readme",
+  "devDependencies": {
+    "@types/uuid": "^9.0.8"
+  }
 }
